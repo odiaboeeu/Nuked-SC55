@@ -347,6 +347,8 @@ READ_RCU:
         else
             goto READ_RCU;
     }
+
+    return 0;
 }
 
 void MCU_AnalogSample(int channel)
@@ -1437,6 +1439,60 @@ void MIDI_Reset(ResetType resetType)
 
 #ifdef NUKED_SC55_HEADLESS
 extern "C" {
+
+
+int SC55_HeadlessLoadMk2RomSetFromMemory(
+    const unsigned char* rom1_data, unsigned int rom1_size,
+    const unsigned char* rom2_data, unsigned int rom2_size,
+    const unsigned char* waverom1_data, unsigned int waverom1_size,
+    const unsigned char* waverom2_data, unsigned int waverom2_size,
+    const unsigned char* rom_sm_data, unsigned int rom_sm_size)
+{
+    if (!rom1_data || !rom2_data || !waverom1_data || !waverom2_data || !rom_sm_data)
+        return 0;
+
+    if (rom1_size != ROM1_SIZE)
+        return 0;
+
+    if (rom2_size != ROM2_SIZE && rom2_size != ROM2_SIZE / 2)
+        return 0;
+
+    if (waverom1_size != 0x200000)
+        return 0;
+
+    if (waverom2_size != 0x100000)
+        return 0;
+
+    if (rom_sm_size != ROMSM_SIZE)
+        return 0;
+
+    romset = ROM_SET_MK2;
+
+    mcu_mk1 = false;
+    mcu_cm300 = false;
+    mcu_st = false;
+    mcu_jv880 = false;
+    mcu_scb55 = false;
+    mcu_sc155 = false;
+
+    rom2_mask = rom2_size - 1;
+
+    memset(&mcu, 0, sizeof(mcu_t));
+
+    memcpy(rom1, rom1_data, ROM1_SIZE);
+    memset(rom2, 0, ROM2_SIZE);
+    memcpy(rom2, rom2_data, rom2_size);
+
+    memcpy(tempbuf, waverom1_data, 0x200000);
+    unscramble(tempbuf, waverom1, 0x200000);
+
+    memcpy(tempbuf, waverom2_data, 0x100000);
+    unscramble(tempbuf, waverom2, 0x100000);
+
+    memcpy(sm_rom, rom_sm_data, ROMSM_SIZE);
+
+    return 1;
+}
 
 int SC55_HeadlessOpenAudio(int pageSize, int pageNum)
 {
