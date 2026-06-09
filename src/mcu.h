@@ -35,7 +35,26 @@
 
 #include <stdint.h>
 #include "mcu_interrupt.h"
+#ifdef NUKED_SC55_HEADLESS
+typedef struct SDL_atomic_t
+{
+    int value;
+} SDL_atomic_t;
+
+static inline int SDL_AtomicGet(SDL_atomic_t *a)
+{
+    return a->value;
+}
+
+static inline int SDL_AtomicSet(SDL_atomic_t *a, int v)
+{
+    int old = a->value;
+    a->value = v;
+    return old;
+}
+#else
 #include "SDL_atomic.h"
+#endif
 
 enum {
     DEV_P1DDR = 0x00,

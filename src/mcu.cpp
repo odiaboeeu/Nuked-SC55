@@ -33,8 +33,73 @@
  */
 #include <stdio.h>
 #include <string.h>
+#ifndef NUKED_SC55_HEADLESS
 #define SDL_MAIN_HANDLED
 #include "SDL.h"
+#else
+#define SDLCALL
+
+typedef int SDL_AudioDeviceID;
+typedef unsigned char Uint8;
+
+struct SDL_mutex {};
+struct SDL_Thread {};
+
+typedef unsigned short SDL_AudioFormat;
+
+struct SDL_AudioSpec
+{
+    int freq;
+    SDL_AudioFormat format;
+    unsigned char channels;
+    unsigned short samples;
+    void (*callback)(void*, unsigned char*, int);
+    void* userdata;
+};
+
+#define AUDIO_S8      0x8008
+#define AUDIO_U8      0x0008
+#define AUDIO_S16MSB  0x9010
+#define AUDIO_S16LSB  0x8011
+#define AUDIO_U16MSB  0x1010
+#define AUDIO_U16LSB  0x0010
+#define AUDIO_S32MSB  0x9020
+#define AUDIO_S32LSB  0x8020
+#define AUDIO_F32MSB  0x9120
+#define AUDIO_F32LSB  0x8120
+#define AUDIO_S16SYS  0x8010
+#define SDL_INIT_AUDIO 0x00000010u
+#define SDL_INIT_VIDEO 0x00000020u
+#define SDL_INIT_TIMER 0x00000001u
+
+static inline int SDL_Init(unsigned int) { return 0; }
+static inline void SDL_Quit(void) {}
+static inline const char* SDL_GetError(void) { return "headless"; }
+
+static inline SDL_mutex* SDL_CreateMutex(void) { return nullptr; }
+static inline void SDL_DestroyMutex(SDL_mutex*) {}
+static inline void SDL_LockMutex(SDL_mutex*) {}
+static inline void SDL_UnlockMutex(SDL_mutex*) {}
+
+static inline void SDL_Delay(unsigned int) {}
+
+static inline SDL_Thread* SDL_CreateThread(int (*)(void*), const char*, void*) { return nullptr; }
+static inline void SDL_WaitThread(SDL_Thread*, int*) {}
+
+static inline int SDL_GetNumAudioDevices(int) { return 1; }
+static inline const char* SDL_GetAudioDeviceName(int, int) { return "headless"; }
+
+static inline SDL_AudioDeviceID SDL_OpenAudioDevice(const char*, int, const SDL_AudioSpec* desired, SDL_AudioSpec* obtained, int)
+{
+    if (obtained && desired)
+        *obtained = *desired;
+
+    return 1;
+}
+
+static inline void SDL_PauseAudioDevice(SDL_AudioDeviceID, int) {}
+static inline void SDL_CloseAudio(void) {}
+#endif
 #include "mcu.h"
 #include "mcu_opcodes.h"
 #include "mcu_interrupt.h"
@@ -43,7 +108,9 @@
 #include "lcd.h"
 #include "submcu.h"
 #include "midi.h"
+#ifndef NUKED_SC55_HEADLESS
 #include "utf8main.h"
+#endif
 #include "utils/files.h"
 
 #if __linux__

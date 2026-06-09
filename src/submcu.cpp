@@ -33,7 +33,9 @@
  */
 #include <stdio.h>
 #include <string.h>
+#ifndef NUKED_SC55_HEADLESS
 #include "SDL_audio.h"
+#endif
 #include "mcu.h"
 #include "submcu.h"
 
