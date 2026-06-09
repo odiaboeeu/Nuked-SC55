@@ -1148,6 +1148,7 @@ int SDLCALL work_thread(void* data)
     return 0;
 }
 
+#ifndef NUKED_SC55_HEADLESS
 static void MCU_Run()
 {
     bool working = true;
@@ -1167,6 +1168,8 @@ static void MCU_Run()
     work_thread_run = false;
     SDL_WaitThread(thread, 0);
 }
+#endif
+
 
 void MCU_PatchROM(void)
 {
@@ -1431,6 +1434,106 @@ void MIDI_Reset(ResetType resetType)
 
 }
 
+
+#ifdef NUKED_SC55_HEADLESS
+extern "C" {
+
+int SC55_HeadlessOpenAudio(int pageSize, int pageNum)
+{
+    return MCU_OpenAudio(-1, pageSize, pageNum);
+}
+
+void SC55_HeadlessCloseAudio(void)
+{
+    MCU_CloseAudio();
+}
+
+void SC55_HeadlessInit(void)
+{
+    MCU_Init();
+    MCU_PatchROM();
+    MCU_Reset();
+    SM_Reset();
+    PCM_Reset();
+}
+
+void SC55_HeadlessReset(void)
+{
+    MCU_Reset();
+    SM_Reset();
+    PCM_Reset();
+}
+
+void SC55_HeadlessPostMIDIByte(unsigned char data)
+{
+    MCU_PostUART(data);
+}
+
+void SC55_HeadlessRunStep(void)
+{
+    if (!mcu.ex_ignore)
+        MCU_Interrupt_Handle();
+    else
+        mcu.ex_ignore = 0;
+
+    if (!mcu.sleep)
+        MCU_ReadInstruction();
+
+    mcu.cycles += 12;
+
+    PCM_Update(mcu.cycles);
+
+    TIMER_Clock(mcu.cycles);
+
+    if (!mcu_mk1 && !mcu_jv880 && !mcu_scb55)
+    {
+        SM_Update(mcu.cycles);
+    }
+    else
+    {
+        MCU_UpdateUART_RX();
+        MCU_UpdateUART_TX();
+    }
+
+    MCU_UpdateAnalog(mcu.cycles);
+
+    if (mcu_mk1)
+    {
+        if (ga_lcd_counter)
+        {
+            ga_lcd_counter--;
+            if (ga_lcd_counter == 0)
+            {
+                MCU_GA_SetGAInt(1, 0);
+                MCU_GA_SetGAInt(1, 1);
+            }
+        }
+    }
+}
+
+int SC55_HeadlessPopSample(short* left, short* right)
+{
+    if (!sample_buffer)
+        return 0;
+
+    if (sample_read_ptr == sample_write_ptr)
+        return 0;
+
+    if (left)
+        *left = sample_buffer[sample_read_ptr + 0];
+
+    if (right)
+        *right = sample_buffer[sample_read_ptr + 1];
+
+    sample_read_ptr = (sample_read_ptr + 2) % audio_buffer_size;
+
+    return 1;
+}
+
+}
+#endif
+
+#ifndef NUKED_SC55_HEADLESS
 int main(int argc, char *argv[])
 {
     (void)argc;
@@ -1840,3 +1943,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+#endif
+
