@@ -620,8 +620,13 @@ void MCU_UpdateAnalog(uint64_t cycles)
 
 mcu_t mcu;
 
+#ifdef NUKED_SC55_HEADLESS_MK2_ONLY
+uint8_t* rom1 = nullptr;
+uint8_t* rom2 = nullptr;
+#else
 uint8_t rom1[ROM1_SIZE];
 uint8_t rom2[ROM2_SIZE];
+#endif
 uint8_t ram[RAM_SIZE];
 uint8_t sram[SRAM_SIZE];
 uint8_t nvram[NVRAM_SIZE];
@@ -1479,6 +1484,21 @@ int SC55_HeadlessLoadMk2RomSetFromMemory(
     mcu_sc155 = false;
 
     rom2_mask = rom2_size - 1;
+
+#ifdef NUKED_SC55_HEADLESS_MK2_ONLY
+    free(rom1);
+    free(rom2);
+    free(waverom1);
+    free(waverom2);
+
+    rom1 = static_cast<uint8_t*>(malloc(ROM1_SIZE));
+    rom2 = static_cast<uint8_t*>(malloc(ROM2_SIZE));
+    waverom1 = static_cast<uint8_t*>(malloc(0x200000));
+    waverom2 = static_cast<uint8_t*>(malloc(0x100000));
+
+    if (!rom1 || !rom2 || !waverom1 || !waverom2)
+        return 0;
+#endif
 
     memset(&mcu, 0, sizeof(mcu_t));
 

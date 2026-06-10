@@ -39,8 +39,13 @@
 #include "pcm.h"
 
 pcm_t pcm;
+#ifdef NUKED_SC55_HEADLESS_MK2_ONLY
+uint8_t* waverom1 = nullptr;
+uint8_t* waverom2 = nullptr;
+#else
 uint8_t waverom1[0x200000];
 uint8_t waverom2[0x200000];
+#endif
 #ifdef NUKED_SC55_HEADLESS_MK2_ONLY
 uint8_t waverom3[1];
 #else

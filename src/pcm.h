@@ -64,8 +64,13 @@ struct pcm_t {
 };
 
 extern pcm_t pcm;
+#ifdef NUKED_SC55_HEADLESS_MK2_ONLY
+extern uint8_t* waverom1;
+extern uint8_t* waverom2;
+#else
 extern uint8_t waverom1[];
 extern uint8_t waverom2[];
+#endif
 extern uint8_t waverom3[];
 extern uint8_t waverom_card[];
 extern uint8_t waverom_exp[];
