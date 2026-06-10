@@ -41,9 +41,21 @@
 pcm_t pcm;
 uint8_t waverom1[0x200000];
 uint8_t waverom2[0x200000];
+#ifdef NUKED_SC55_HEADLESS_MK2_ONLY
+uint8_t waverom3[1];
+#else
 uint8_t waverom3[0x100000];
+#endif
+#ifdef NUKED_SC55_HEADLESS_MK2_ONLY
+uint8_t waverom_card[1];
+#else
 uint8_t waverom_card[0x200000];
+#endif
+#ifdef NUKED_SC55_HEADLESS_MK2_ONLY
+uint8_t waverom_exp[1];
+#else
 uint8_t waverom_exp[0x800000];
+#endif
 
 uint8_t PCM_ReadROM(uint32_t address)
 {

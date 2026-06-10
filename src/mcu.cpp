@@ -33,6 +33,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #ifndef NUKED_SC55_HEADLESS
 #define SDL_MAIN_HANDLED
 #include "SDL.h"
@@ -1215,7 +1216,9 @@ void MCU_WriteP1(uint8_t data)
     mcu_p1_data = data;
 }
 
+#ifndef NUKED_SC55_HEADLESS
 uint8_t tempbuf[0x800000];
+#endif
 
 void unscramble(uint8_t *src, uint8_t *dst, int len)
 {
@@ -1483,11 +1486,17 @@ int SC55_HeadlessLoadMk2RomSetFromMemory(
     memset(rom2, 0, ROM2_SIZE);
     memcpy(rom2, rom2_data, rom2_size);
 
-    memcpy(tempbuf, waverom1_data, 0x200000);
-    unscramble(tempbuf, waverom1, 0x200000);
+    unsigned char* pTemp = static_cast<unsigned char*>(malloc(0x200000));
+    if (!pTemp)
+        return 0;
 
-    memcpy(tempbuf, waverom2_data, 0x100000);
-    unscramble(tempbuf, waverom2, 0x100000);
+    memcpy(pTemp, waverom1_data, 0x200000);
+    unscramble(pTemp, waverom1, 0x200000);
+
+    memcpy(pTemp, waverom2_data, 0x100000);
+    unscramble(pTemp, waverom2, 0x100000);
+
+    free(pTemp);
 
     memcpy(sm_rom, rom_sm_data, ROMSM_SIZE);
 
