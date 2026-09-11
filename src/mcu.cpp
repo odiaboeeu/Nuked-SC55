@@ -1554,6 +1554,11 @@ void SC55_HeadlessPostMIDIByte(unsigned char data)
     MCU_PostUART(data);
 }
 
+
+#ifndef NUKED_SC55_HEADLESS_CYCLES_PER_STEP
+#define NUKED_SC55_HEADLESS_CYCLES_PER_STEP 12
+#endif
+
 void SC55_HeadlessRunStep(void)
 {
     if (!mcu.ex_ignore)
@@ -1564,7 +1569,7 @@ void SC55_HeadlessRunStep(void)
     if (!mcu.sleep)
         MCU_ReadInstruction();
 
-    mcu.cycles += 12;
+    mcu.cycles += NUKED_SC55_HEADLESS_CYCLES_PER_STEP;
 
     PCM_Update(mcu.cycles);
 
@@ -1580,7 +1585,9 @@ void SC55_HeadlessRunStep(void)
         MCU_UpdateUART_TX();
     }
 
+#ifndef NUKED_SC55_HEADLESS_SKIP_ANALOG
     MCU_UpdateAnalog(mcu.cycles);
+#endif
 
     if (mcu_mk1)
     {
@@ -1595,6 +1602,13 @@ void SC55_HeadlessRunStep(void)
         }
     }
 }
+
+extern "C" void SC55_HeadlessRunSteps(unsigned int count)
+{
+    for (unsigned int i = 0; i < count; ++i)
+        SC55_HeadlessRunStep();
+}
+
 
 int SC55_HeadlessPopSample(short* left, short* right)
 {
