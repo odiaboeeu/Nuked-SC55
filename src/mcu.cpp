@@ -1490,14 +1490,18 @@ int SC55_HeadlessLoadMk2RomSetFromMemory(
     free(rom2);
     free(waverom1);
     free(waverom2);
+    free(waverom3);
 
     rom1 = static_cast<uint8_t*>(malloc(ROM1_SIZE));
     rom2 = static_cast<uint8_t*>(malloc(ROM2_SIZE));
     waverom1 = static_cast<uint8_t*>(malloc(0x200000));
     waverom2 = static_cast<uint8_t*>(malloc(0x100000));
+    waverom3 = static_cast<uint8_t*>(malloc(0x100000));
 
-    if (!rom1 || !rom2 || !waverom1 || !waverom2)
+    if (!rom1 || !rom2 || !waverom1 || !waverom2 || !waverom3)
         return 0;
+
+    memset(waverom3, 0, 0x100000);
 #endif
 
     memset(&mcu, 0, sizeof(mcu_t));
