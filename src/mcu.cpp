@@ -1527,6 +1527,90 @@ int SC55_HeadlessLoadMk2RomSetFromMemory(
     return 1;
 }
 
+int SC55_HeadlessLoadMk1RomSetFromMemory(
+    const unsigned char* rom1_data, unsigned int rom1_size,
+    const unsigned char* rom2_data, unsigned int rom2_size,
+    const unsigned char* waverom1_data, unsigned int waverom1_size,
+    const unsigned char* waverom2_data, unsigned int waverom2_size,
+    const unsigned char* waverom3_data, unsigned int waverom3_size)
+{
+    if (!rom1_data || !rom2_data ||
+        !waverom1_data || !waverom2_data || !waverom3_data)
+    {
+        return 0;
+    }
+
+    if (rom1_size != ROM1_SIZE)
+        return 0;
+
+    if (rom2_size != ROM2_SIZE && rom2_size != ROM2_SIZE / 2)
+        return 0;
+
+    if (waverom1_size != 0x100000 ||
+        waverom2_size != 0x100000 ||
+        waverom3_size != 0x100000)
+    {
+        return 0;
+    }
+
+    romset = ROM_SET_MK1;
+
+    mcu_mk1 = true;
+    mcu_cm300 = false;
+    mcu_st = false;
+    mcu_jv880 = false;
+    mcu_scb55 = false;
+    mcu_sc155 = false;
+
+    rom2_mask = rom2_size - 1;
+
+#ifdef NUKED_SC55_HEADLESS_MK2_ONLY
+    free(rom1);
+    free(rom2);
+    free(waverom1);
+    free(waverom2);
+    free(waverom3);
+
+    rom1 = static_cast<uint8_t*>(malloc(ROM1_SIZE));
+    rom2 = static_cast<uint8_t*>(malloc(ROM2_SIZE));
+    waverom1 = static_cast<uint8_t*>(malloc(0x100000));
+    waverom2 = static_cast<uint8_t*>(malloc(0x100000));
+    waverom3 = static_cast<uint8_t*>(malloc(0x100000));
+
+    if (!rom1 || !rom2 ||
+        !waverom1 || !waverom2 || !waverom3)
+    {
+        return 0;
+    }
+#endif
+
+    memset(&mcu, 0, sizeof(mcu_t));
+
+    memcpy(rom1, rom1_data, ROM1_SIZE);
+
+    memset(rom2, 0, ROM2_SIZE);
+    memcpy(rom2, rom2_data, rom2_size);
+
+    unsigned char* pTemp =
+        static_cast<unsigned char*>(malloc(0x100000));
+
+    if (!pTemp)
+        return 0;
+
+    memcpy(pTemp, waverom1_data, 0x100000);
+    unscramble(pTemp, waverom1, 0x100000);
+
+    memcpy(pTemp, waverom2_data, 0x100000);
+    unscramble(pTemp, waverom2, 0x100000);
+
+    memcpy(pTemp, waverom3_data, 0x100000);
+    unscramble(pTemp, waverom3, 0x100000);
+
+    free(pTemp);
+
+    return 1;
+}
+
 int SC55_HeadlessOpenAudio(int pageSize, int pageNum)
 {
     return MCU_OpenAudio(-1, pageSize, pageNum);
